@@ -1,43 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>RNG Frequency (Ready)</title>
+  <title>RNG Result</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:2rem;background:#fff;color:#111}
-    .card{max-width:480px;margin:0 auto;padding:1.5rem;border-radius:12px;border:1px solid #ddd;text-align:center}
-    .big{color:#d33;font-weight:700}
-    .small{color:#1565c0;font-weight:700}
-    .mono{font-family:Menlo,monospace;background:#f7f7f7;padding:.5rem;border-radius:6px;display:inline-block}
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .box { margin: 20px; font-size: 24px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Final RNG Frequency Result</h1>
-    <p>Server time (UTC): <span id="time">--</span></p>
-    <p>Previous: <span id="previous">-</span></p>
-    <p>Final: <span id="final">-</span></p>
-    <p class="mono">CSRNG: <span id="csrng">-</span> | QRNG: <span id="qrng">-</span> | Random.org: <span id="random">-</span></p>
-    <p>Next actions: fetch @ :25 UTC → preview @ :30 UTC → final locked @ :00 UTC</p>
-  </div>
+  <h1>🔢 RNG Final Result</h1>
+  <div class="box">⏰ Timer: <span id="timer"></span></div>
+  <div class="box">📊 Numbers: <span id="numbers"></span></div>
+  <div class="box">🏆 Final: <span id="final"></span></div>
+  <div class="box">⬅️ Previous: <span id="previous"></span></div>
+
   <script>
-    async function refresh() {
-      try {
-        const r = await fetch('/api/result');
-        const j = await r.json();
-        document.getElementById('time').innerText = j.serverTimeUTC;
-        document.getElementById('previous').innerText = j.previous ?? '-';
-        document.getElementById('final').innerText = j.final ?? '-';
-        document.getElementById('csrng').innerText = j.sources.csrng ?? '-';
-        document.getElementById('qrng').innerText = j.sources.qrng ?? '-';
-        document.getElementById('random').innerText = j.sources.randomOrg ?? '-';
-      } catch (e) {
-        console.error('refresh error', e);
+    let previous = "-";
+
+    function updateTimer() {
+      const now = new Date();
+      let sec = now.getSeconds();
+      let remaining = 60 - sec;
+      document.getElementById("timer").innerText = remaining + "s";
+
+      if (sec === 0) {
+        fetch("/result").then(res => res.json()).then(data => {
+          document.getElementById("numbers").innerText = data.numbers.join(", ");
+          document.getElementById("final").innerText = data.result;
+          previous = data.result;
+        });
+      }
+      if (sec === 30) {
+        document.getElementById("previous").innerText = previous;
       }
     }
-    setInterval(refresh, 3000);
-    refresh();
+
+    setInterval(updateTimer, 1000);
   </script>
 </body>
 </html>
